@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: ./api
+      dockerfile: ../docker/Dockerfile.api
+    container_name: gym_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=gymdb
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./api:/var/www/html
+
+  db:
+    image: postgres:16
+    container_name: gym_db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=gymdb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    container_name: gym_redis
+    ports:
+      - "6379:6379"
+
+  node:
+    build:
+      context: ./app
+      dockerfile: ../docker/Dockerfile.node
+    container_name: gym_front
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./app:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run dev
+    depends_on:
+      - app
+
+volumes:
+  db_data:
