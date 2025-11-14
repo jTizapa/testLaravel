@@ -4,7 +4,7 @@ services:
   app:
     build:
       context: ./api
-      dockerfile: ../docker/Dockerfile.api
+      dockerfile: ./Dockerfile
     container_name: gym_api
     restart: unless-stopped
     ports:
@@ -43,14 +43,14 @@ services:
   node:
     build:
       context: ./app
-      dockerfile: ../docker/Dockerfile.node
+      dockerfile: ./Dockerfile
     container_name: gym_front
     ports:
       - "5173:5173"
     volumes:
       - ./app:/usr/src/app
       - /usr/src/app/node_modules
-    command: npm run dev
+    command: npm run dev -- --host 0.0.0.0
     depends_on:
       - app
 

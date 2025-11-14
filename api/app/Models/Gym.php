@@ -9,15 +9,7 @@ class Gym extends Tenant
 {
     use HasFactory;
 
-    protected $table = 'gyms';
-
-    protected $fillable = [
-        'name',
-        'domain',
-        'database',
-        'data',
-    ];
-
+    // Use Stancl's default `tenants` table and `data` JSON column
     protected $casts = [
         'data' => 'array',
     ];

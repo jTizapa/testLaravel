@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class RolesSeeder extends Seeder
@@ -13,6 +14,20 @@ class RolesSeeder extends Seeder
      */
     public function run(): void
     {
+        // Permisos mínimos del dominio
+        $permissions = [
+            'members-view', 'members-create', 'members-update', 'members-delete',
+            'plans-view', 'plans-create', 'plans-update', 'plans-delete',
+            'payments-view', 'payments-create',
+        ];
+
+        foreach ($permissions as $perm) {
+            Permission::firstOrCreate([
+                'name' => $perm,
+                'guard_name' => 'web',
+            ]);
+        }
+
         $roles = [
             'admin',
             'manager',
@@ -21,12 +36,31 @@ class RolesSeeder extends Seeder
         ];
 
         foreach ($roles as $roleName) {
-            Role::firstOrCreate(
+            $role = Role::firstOrCreate(
                 [
                     'name' => $roleName,
                     'guard_name' => 'web',
                 ]
             );
+
+            // Asignación de permisos básica
+            if ($roleName === 'admin') {
+                $role->syncPermissions(Permission::all());
+            } elseif ($roleName === 'manager') {
+                $role->syncPermissions([
+                    'members-view','members-create','members-update','members-delete',
+                    'plans-view','plans-create','plans-update','plans-delete',
+                    'payments-view','payments-create',
+                ]);
+            } elseif ($roleName === 'staff') {
+                $role->syncPermissions([
+                    'members-view','members-update',
+                    'plans-view',
+                    'payments-view',
+                ]);
+            } else { // member
+                $role->syncPermissions([]);
+            }
         }
     }
 }
