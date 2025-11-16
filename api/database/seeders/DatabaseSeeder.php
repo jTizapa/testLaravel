@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolesSeeder::class,
+            DemoDataSeeder::class,
         ]);
 
         $admin = User::updateOrCreate(

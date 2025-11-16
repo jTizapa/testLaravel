@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Events\SubscriptionStatusChanged;
 use App\Http\Requests\StoreSubscriptionRequest;
 use App\Http\Requests\UpdateSubscriptionRequest;
+use App\Traits\StructuredLogging;
 use App\Models\Plan;
 use App\Models\Subscription;
 use Carbon\Carbon;
 
 class SubscriptionController extends Controller
 {
+    use StructuredLogging;
+
     public function index()
     {
         return Subscription::with(['member','plan'])->latest()->paginate(15);
@@ -32,6 +36,14 @@ class SubscriptionController extends Controller
             'amount' => $data['amount'] ?? $plan->price,
         ]);
 
+        SubscriptionStatusChanged::dispatch($subscription->load(['member','plan']));
+        $this->logInfo('subscription.created', [
+            'subscription_id' => $subscription->id,
+            'member_id' => $subscription->member_id,
+            'plan_id' => $subscription->plan_id,
+            'status' => $subscription->status,
+        ]);
+
         return response()->json($subscription->load(['member','plan']), 201);
     }
 
@@ -45,6 +57,12 @@ class SubscriptionController extends Controller
         $data = $request->validated();
 
         $subscription->fill($data)->save();
+        SubscriptionStatusChanged::dispatch($subscription->load(['member','plan']));
+        $this->logInfo('subscription.updated', [
+            'subscription_id' => $subscription->id,
+            'status' => $subscription->status,
+        ]);
+
         return response()->json($subscription->load(['member','plan']));
     }
 
