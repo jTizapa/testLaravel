@@ -10,6 +10,11 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withMiddleware(function (Middleware $middleware) {
+        // Usa la configuración por defecto de Laravel 11 para registrar los grupos web/api.
+        $middleware->web();
+        $middleware->api();
+    })
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();

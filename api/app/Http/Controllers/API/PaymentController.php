@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StorePaymentRequest;
 use App\Models\Member;
 use App\Models\Payment;
 use App\Models\Subscription;
@@ -16,13 +17,9 @@ class PaymentController extends Controller
         return Payment::with(['member','subscription.plan'])->latest()->paginate(15);
     }
 
-    public function store(Request $request)
+    public function store(StorePaymentRequest $request)
     {
-        $data = $request->validate([
-            'subscription_id' => ['required','exists:subscriptions,id'],
-            'amount' => ['required','numeric','min:0'],
-            'method' => ['nullable','string','max:50'],
-        ]);
+        $data = $request->validated();
 
         $subscription = Subscription::with('member')->findOrFail($data['subscription_id']);
         $member = $subscription->member;
@@ -42,4 +39,3 @@ class PaymentController extends Controller
         return response()->json($payment->load(['member','subscription.plan']), 201);
     }
 }
-
