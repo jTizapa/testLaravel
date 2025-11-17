@@ -1,17 +1,12 @@
 <template>
-  <section class="panel">
-    <h2>Pagos</h2>
-    <p>Implementar tabla y formulario de pagos manuales. Próximamente.</p>
-  </section>
+  <PaymentsTable />
+  <p class="note">Formulario simple requiere ID de suscripción existente.</p>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import PaymentsTable from '@/components/PaymentsTable.vue'
+</script>
 
 <style scoped>
-.panel {
-  background: #fff;
-  padding: 1.25rem;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-}
+.note { margin-top: 0.75rem; color: #6b7280; }
 </style>

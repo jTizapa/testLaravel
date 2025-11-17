@@ -1,17 +1,12 @@
 <template>
-  <section class="panel">
-    <h2>Planes</h2>
-    <p>Implementar catálogo de planes con creación/edición. Próximamente.</p>
-  </section>
+  <PlansTable />
+  <p class="note">CRUD de planes conectado a la API. Pendiente filtros/paginación real.</p>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import PlansTable from '@/components/PlansTable.vue'
+</script>
 
 <style scoped>
-.panel {
-  background: #fff;
-  padding: 1.25rem;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-}
+.note { margin-top: 0.75rem; color: #6b7280; }
 </style>

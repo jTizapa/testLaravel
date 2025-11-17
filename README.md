@@ -2,18 +2,19 @@
 
 Simple B2B2C payments management for gym memberships (Laravel REST API + Vue SPA).
 
-## Structure
-- `api/`: Laravel 11 backend with Sanctum auth, Spatie permission, Pest tests and Artisan commands.
-- `app/`: Vue 3 + Pinia + Router + TypeScript SPA powered by Vite and Vitest.
-- `docker-compose.yaml`: Postgres + Redis + PHP + Node containers that mirror local dev.
+## Estructura
+- `api/`: Laravel 11 (Sanctum, Spatie permission, Pest).
+- `app/`: Vue 3 + Pinia + Router + TypeScript (Vite + Vitest).
+- `docker-compose.yaml`: Postgres + Redis + PHP + Node.
 
-## Getting started
+## Inicio rápido (Docker)
 ```bash
-# copy env templates
+# copiar envs
 cp .env .env.local
 cp api/.env.example api/.env
+cp app/.env.example app/.env
 
-# build containers (optional, recommended for parity)
+# levantar servicios
 docker compose up --build
 ```
 
@@ -25,7 +26,7 @@ php artisan key:generate
 php artisan migrate --seed
 php artisan test
 ```
-Auth tokens are issued via Sanctum (`/api/v1/auth/login`).
+Tokens con Sanctum: `/api/v1/auth/login` (usuarios seed: admin@gymstack.test / password).
 
 ## Frontend (Vue)
 ```bash
@@ -34,9 +35,8 @@ npm install
 npm run dev
 npm run test:unit
 ```
-The SPA reads `VITE_APP_API_URL` from `app/.env` or `package.json` scripts when served behind Nginx.
+Env SPA: `app/.env` define `VITE_APP_API_URL=http://localhost:8000/api/v1` y `VITE_APP_WS_URL=ws://localhost:6001`.
 
-## Notes
-- Filament/Tenancy were removed from this workspace; backend logic now uses a single database.
-- Logs, queues and broadcasts rely on array drivers until further configuration.
-- Follow the phased plan in the issue tracker before extending functionality.
+## Notas 
+- Canal de broadcast: `dashboard` (eventos `payment.recorded`, `subscription.status_changed`).
+- Canal de logs estructurados: `structured` en `storage/logs/structured.log`.

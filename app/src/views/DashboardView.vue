@@ -1,16 +1,34 @@
 <template>
   <section class="panel">
     <h2>Dashboard</h2>
-    <p>Bienvenido. Aquí mostraremos métricas en tiempo real de pagos y suscripciones.</p>
-    <div class="grid">
-      <div class="card">Total miembros (seed/demo)</div>
-      <div class="card">Pagos recientes</div>
-      <div class="card">Suscripciones por vencer</div>
-    </div>
+    <p>Métricas básicas y eventos en tiempo real.</p>
+    <DashboardCards :stats="store.stats" />
   </section>
+  <DashboardEvents :events="store.events" />
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { onMounted, onBeforeUnmount } from 'vue'
+import DashboardCards from '@/components/DashboardCards.vue'
+import DashboardEvents from '@/components/DashboardEvents.vue'
+import { useDashboardStore } from '@/stores/dashboard'
+import { useEcho } from '@/utils/realtime'
+
+const store = useDashboardStore()
+let echo: ReturnType<typeof useEcho> | null = null
+
+onMounted(async () => {
+  await store.loadStats()
+  echo = useEcho()
+  echo.channel('dashboard')
+    .listen('.payment.recorded', (payload: any) => store.pushEvent('payment.recorded', payload))
+    .listen('.subscription.status_changed', (payload: any) => store.pushEvent('subscription.status_changed', payload))
+})
+
+onBeforeUnmount(() => {
+  echo?.disconnect()
+})
+</script>
 
 <style scoped>
 .panel {
@@ -18,17 +36,6 @@
   padding: 1.25rem;
   border-radius: 10px;
   border: 1px solid #e5e7eb;
-}
-.grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  margin-top: 1rem;
-}
-.card {
-  background: #f8fafc;
-  padding: 1rem;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  margin-bottom: 1rem;
 }
 </style>

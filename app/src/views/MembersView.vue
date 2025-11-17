@@ -1,17 +1,12 @@
 <template>
-  <section class="panel">
-    <h2>Miembros</h2>
-    <p>Implementar tabla con filtros y paginación. Próximamente.</p>
-  </section>
+  <MembersTable />
+  <p class="note">Faltan filtros/paginación real; la base de CRUD está conectada a la API.</p>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import MembersTable from '@/components/MembersTable.vue'
+</script>
 
 <style scoped>
-.panel {
-  background: #fff;
-  padding: 1.25rem;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-}
+.note { margin-top: 0.75rem; color: #6b7280; }
 </style>
