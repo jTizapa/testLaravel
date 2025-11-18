@@ -8,6 +8,10 @@ const isAuthPage = computed(() => route.name === 'login')
 </script>
 
 <template>
-  <RouterView v-if="isAuthPage" />
-  <AppShell v-else />
+  <v-app>
+    <v-main>
+      <RouterView v-if="isAuthPage" />
+      <AppShell v-else />
+    </v-main>
+  </v-app>
 </template>

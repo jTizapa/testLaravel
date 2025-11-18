@@ -1,49 +1,38 @@
 <template>
-  <div class="modal">
-    <div class="modal__content">
-      <header class="modal__header">
-        <h3>{{ member ? 'Editar miembro' : 'Nuevo miembro' }}</h3>
-        <button class="icon" @click="$emit('close')">✕</button>
-      </header>
-      <form @submit.prevent="onSubmit">
-        <label>
-          Nombre
-          <input v-model="form.name" required />
-        </label>
-        <label>
-          Correo
-          <input v-model="form.email" type="email" required />
-        </label>
-        <label>
-          Teléfono
-          <input v-model="form.phone" />
-        </label>
-        <label>
-          Estado
-          <select v-model="form.status">
-            <option value="active">Activo</option>
-            <option value="inactive">Inactivo</option>
-          </select>
-        </label>
-        <footer class="actions">
-          <button type="button" @click="$emit('close')">Cancelar</button>
-          <button type="submit" class="primary" :disabled="loading">
-            {{ loading ? 'Guardando…' : 'Guardar' }}
-          </button>
-        </footer>
-        <p class="error" v-if="error">{{ error }}</p>
-      </form>
-    </div>
-  </div>
+  <v-dialog v-model="open" max-width="520">
+    <v-card>
+      <v-card-title>{{ member ? 'Editar miembro' : 'Nuevo miembro' }}</v-card-title>
+      <v-card-text>
+        <v-form @submit.prevent="onSubmit" class="d-flex flex-column ga-4">
+          <v-text-field v-model="form.name" label="Nombre" required variant="outlined" />
+          <v-text-field v-model="form.email" label="Correo" type="email" required variant="outlined" />
+          <v-text-field v-model="form.phone" label="Teléfono" variant="outlined" />
+          <v-select
+            v-model="form.status"
+            label="Estado"
+            :items="['active', 'inactive']"
+            variant="outlined"
+          />
+          <v-alert v-if="error" type="error" density="compact" variant="tonal">{{ error }}</v-alert>
+        </v-form>
+      </v-card-text>
+      <v-card-actions class="justify-end ga-2">
+        <v-btn variant="text" @click="emit('close')">Cancelar</v-btn>
+        <v-btn color="primary" :loading="loading" @click="onSubmit">
+          Guardar
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+import { reactive, ref, watch, computed } from 'vue'
 import type { Member, MemberPayload } from '@/utils/members'
 import { useMembersStore } from '@/stores/members'
 
-const props = defineProps<{ member: Member | null }>()
-const emit = defineEmits<{ saved: [] ; close: [] }>()
+const props = defineProps<{ member: Member | null; modelValue: boolean }>()
+const emit = defineEmits<{ saved: []; close: []; 'update:modelValue': [boolean] }>()
 const store = useMembersStore()
 
 const form = reactive<MemberPayload>({
@@ -54,20 +43,28 @@ const form = reactive<MemberPayload>({
 })
 const loading = ref(false)
 const error = ref('')
+const open = computed({
+  get: () => props.modelValue,
+  set: (val: boolean) => emit('update:modelValue', val),
+})
 
-watch(() => props.member, (m) => {
-  if (m) {
-    form.name = m.name
-    form.email = m.email
-    form.phone = m.phone || ''
-    form.status = m.status
-  } else {
-    form.name = ''
-    form.email = ''
-    form.phone = ''
-    form.status = 'active'
-  }
-}, { immediate: true })
+watch(
+  () => props.member,
+  (m) => {
+    if (m) {
+      form.name = m.name
+      form.email = m.email
+      form.phone = m.phone || ''
+      form.status = m.status
+    } else {
+      form.name = ''
+      form.email = ''
+      form.phone = ''
+      form.status = 'active'
+    }
+  },
+  { immediate: true }
+)
 
 const onSubmit = async () => {
   loading.value = true
@@ -79,6 +76,7 @@ const onSubmit = async () => {
       await store.create(form)
     }
     emit('saved')
+    emit('update:modelValue', false)
   } catch (e) {
     error.value = 'No se pudo guardar el miembro'
   } finally {
@@ -86,56 +84,3 @@ const onSubmit = async () => {
   }
 }
 </script>
-
-<style scoped>
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: grid;
-  place-items: center;
-}
-.modal__content {
-  background: #fff;
-  padding: 1rem;
-  border-radius: 8px;
-  width: min(500px, 90vw);
-  border: 1px solid #e5e7eb;
-}
-.modal__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-.icon {
-  border: none;
-  background: transparent;
-  font-size: 1.1rem;
-  cursor: pointer;
-}
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-input, select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-}
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-button {
-  padding: 0.5rem 0.8rem;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-}
-button.primary { background: #2563eb; color: #fff; }
-.error { color: #b91c1c; }
-</style>

@@ -14,41 +14,35 @@
     <div v-if="message" class="info">{{ message }}</div>
     <div v-if="store.error" class="alert">{{ store.error }}</div>
 
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Correo</th>
-          <th>Teléfono</th>
-          <th>Estado</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="member in filtered" :key="member.id">
-          <td>{{ member.name }}</td>
-          <td>{{ member.email }}</td>
-          <td>{{ member.phone || '-' }}</td>
-          <td>
-            <span :class="['pill', member.status === 'active' ? 'pill--green' : 'pill--gray']">
-              {{ member.status }}
-            </span>
-          </td>
-          <td class="actions">
-            <button @click="edit(member)">Editar</button>
-            <button class="danger" @click="remove(member.id)">Eliminar</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <v-data-table
+      :headers="headers"
+      :items="filtered"
+      density="comfortable"
+      :items-per-page="store.meta?.per_page || 15"
+      class="elevation-1"
+      disable-pagination
+    >
+      <template #item.status="{ item }">
+        <v-chip :color="item.status === 'active' ? 'green' : 'grey'" variant="tonal" size="small">
+          {{ item.status }}
+        </v-chip>
+      </template>
+      <template #item.actions="{ item }">
+        <v-btn icon="mdi-pencil" size="small" variant="text" @click="edit(item)"></v-btn>
+        <v-btn icon="mdi-delete" size="small" variant="text" color="error" @click="remove(item.id)"></v-btn>
+      </template>
+    </v-data-table>
 
     <div class="pagination" v-if="store.meta">
-      <button :disabled="store.meta.current_page <= 1" @click="changePage(store.meta.current_page - 1)">Anterior</button>
+      <v-btn :disabled="store.meta.current_page <= 1" @click="changePage(store.meta.current_page - 1)">Anterior</v-btn>
       <span>Página {{ store.meta.current_page }} de {{ store.meta.last_page }}</span>
-      <button :disabled="store.meta.current_page >= store.meta.last_page" @click="changePage(store.meta.current_page + 1)">Siguiente</button>
+      <v-btn :disabled="store.meta.current_page >= store.meta.last_page" @click="changePage(store.meta.current_page + 1)">Siguiente</v-btn>
     </div>
 
-    <MemberForm v-if="showForm" :member="selected" @close="closeForm" @saved="onSaved" />
+    <MemberForm v-model="showForm" :member="selected" @close="closeForm" @saved="onSaved" />
+    <v-snackbar v-model="messageShown" color="success" timeout="2000">
+      {{ message }}
+    </v-snackbar>
   </section>
 </template>
 
@@ -63,6 +57,14 @@ const showForm = ref(false)
 const selected = ref<Member | null>(null)
 const search = ref('')
 const message = ref('')
+const messageShown = ref(false)
+const headers = [
+  { title: 'Nombre', key: 'name' },
+  { title: 'Correo', key: 'email' },
+  { title: 'Teléfono', key: 'phone' },
+  { title: 'Estado', key: 'status' },
+  { title: '', key: 'actions', sortable: false },
+]
 
 onMounted(() => {
   store.load()
@@ -90,7 +92,7 @@ const remove = async (id: number) => {
 const onSaved = () => {
   showForm.value = false
   message.value = 'Miembro guardado'
-  setTimeout(() => (message.value = ''), 2500)
+  messageShown.value = true
 }
 
 const filtered = computed(() => {

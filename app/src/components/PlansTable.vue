@@ -14,41 +14,35 @@
     <div v-if="message" class="info">{{ message }}</div>
     <div v-if="store.error" class="alert">{{ store.error }}</div>
 
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Días</th>
-          <th>Precio</th>
-          <th>Activo</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="plan in filtered" :key="plan.id">
-          <td>{{ plan.name }}</td>
-          <td>{{ plan.duration_days }}</td>
-          <td>${{ plan.price }}</td>
-          <td>
-            <span :class="['pill', plan.active ? 'pill--green' : 'pill--gray']">
-              {{ plan.active ? 'Sí' : 'No' }}
-            </span>
-          </td>
-          <td class="actions">
-            <button @click="edit(plan)">Editar</button>
-            <button class="danger" @click="remove(plan.id)">Eliminar</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <v-data-table
+      :headers="headers"
+      :items="filtered"
+      density="comfortable"
+      :items-per-page="store.meta?.per_page || 15"
+      class="elevation-1"
+      disable-pagination
+    >
+      <template #item.active="{ item }">
+        <v-chip :color="item.active ? 'green' : 'grey'" variant="tonal" size="small">
+          {{ item.active ? 'Sí' : 'No' }}
+        </v-chip>
+      </template>
+      <template #item.actions="{ item }">
+        <v-btn icon="mdi-pencil" size="small" variant="text" @click="edit(item)"></v-btn>
+        <v-btn icon="mdi-delete" size="small" variant="text" color="error" @click="remove(item.id)"></v-btn>
+      </template>
+    </v-data-table>
 
     <div class="pagination" v-if="store.meta">
-      <button :disabled="store.meta.current_page <= 1" @click="changePage(store.meta.current_page - 1)">Anterior</button>
+      <v-btn :disabled="store.meta.current_page <= 1" @click="changePage(store.meta.current_page - 1)">Anterior</v-btn>
       <span>Página {{ store.meta.current_page }} de {{ store.meta.last_page }}</span>
-      <button :disabled="store.meta.current_page >= store.meta.last_page" @click="changePage(store.meta.current_page + 1)">Siguiente</button>
+      <v-btn :disabled="store.meta.current_page >= store.meta.last_page" @click="changePage(store.meta.current_page + 1)">Siguiente</v-btn>
     </div>
 
-    <PlanForm v-if="showForm" :plan="selected" @close="closeForm" @saved="onSaved" />
+    <PlanForm v-model="showForm" :plan="selected" @close="closeForm" @saved="onSaved" />
+    <v-snackbar v-model="messageShown" color="success" timeout="2000">
+      {{ message }}
+    </v-snackbar>
   </section>
 </template>
 
@@ -63,6 +57,14 @@ const showForm = ref(false)
 const selected = ref<Plan | null>(null)
 const search = ref('')
 const message = ref('')
+const messageShown = ref(false)
+const headers = [
+  { title: 'Nombre', key: 'name' },
+  { title: 'Días', key: 'duration_days' },
+  { title: 'Precio', key: 'price' },
+  { title: 'Activo', key: 'active' },
+  { title: '', key: 'actions', sortable: false },
+]
 
 onMounted(() => {
   store.load()
@@ -90,7 +92,7 @@ const remove = async (id: number) => {
 const onSaved = () => {
   showForm.value = false
   message.value = 'Plan guardado'
-  setTimeout(() => (message.value = ''), 2500)
+  messageShown.value = true
 }
 
 const filtered = computed(() => {
