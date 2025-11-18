@@ -6,8 +6,8 @@
         <p class="subtitle">Gestiona planes de membresía</p>
       </div>
       <div class="filters">
-        <input v-model="search" placeholder="Buscar por nombre" />
-        <button class="primary" @click="openCreate">Agregar</button>
+        <v-text-field v-model="search" label="Buscar por nombre" density="comfortable" hide-details />
+        <v-btn color="primary" @click="openCreate">Agregar</v-btn>
       </div>
     </header>
 
@@ -118,28 +118,16 @@ const changePage = (page: number) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 .filters {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-.filters input {
-  padding: 0.4rem 0.6rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-}
 .subtitle { color: #6b7280; margin: 0.25rem 0 0; }
 .info { color: #166534; margin-bottom: 0.5rem; }
-.table { width: 100%; border-collapse: collapse; }
-th, td { padding: 0.6rem; border-bottom: 1px solid #e5e7eb; text-align: left; }
-.actions { display: flex; gap: 0.5rem; }
-button { border: none; padding: 0.4rem 0.7rem; border-radius: 6px; cursor: pointer; }
-button.primary { background: #2563eb; color: #fff; }
-button.danger { background: #dc2626; color: #fff; }
-.pill { padding: 0.25rem 0.5rem; border-radius: 999px; font-size: 0.85rem; }
-.pill--green { background: #dcfce7; color: #166534; }
-.pill--gray { background: #e5e7eb; color: #374151; }
 .alert { color: #b91c1c; margin-bottom: 0.5rem; }
 .pagination {
   margin-top: 0.75rem;

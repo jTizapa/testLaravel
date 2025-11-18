@@ -1,47 +1,47 @@
 <template>
-  <div class="modal">
-    <div class="modal__content">
-      <header class="modal__header">
-        <h3>Registrar pago manual</h3>
-        <button class="icon" @click="$emit('close')">✕</button>
-      </header>
-      <form @submit.prevent="onSubmit">
-        <label>
-          Subscripción
-          <select v-model.number="form.subscription_id" required>
-            <option value="" disabled>Selecciona una suscripción</option>
-            <option v-for="option in options" :key="option.id" :value="option.id">
-              #{{ option.id }} - {{ option.member }} / {{ option.plan }}
-            </option>
-          </select>
-        </label>
-        <label>
-          Monto
-          <input v-model.number="form.amount" type="number" step="0.01" min="0" required />
-        </label>
-        <label>
-          Método
-          <input v-model="form.method" placeholder="manual" />
-        </label>
-        <footer class="actions">
-          <button type="button" @click="$emit('close')">Cancelar</button>
-          <button type="submit" class="primary" :disabled="loading">
-            {{ loading ? 'Guardando…' : 'Guardar' }}
-          </button>
-        </footer>
-        <p class="error" v-if="error">{{ error }}</p>
-      </form>
-    </div>
-  </div>
+  <v-dialog v-model="open" max-width="520">
+    <v-card>
+      <v-card-title>Registrar pago manual</v-card-title>
+      <v-card-text>
+        <v-form class="d-flex flex-column ga-4">
+          <v-select
+            v-model="form.subscription_id"
+            :items="options"
+            item-title="label"
+            item-value="id"
+            label="Subscripción"
+            variant="outlined"
+            required
+          />
+          <v-text-field
+            v-model.number="form.amount"
+            label="Monto"
+            type="number"
+            step="0.01"
+            min="0"
+            variant="outlined"
+            required
+          />
+          <v-text-field v-model="form.method" label="Método" variant="outlined" />
+          <v-alert v-if="error" type="error" density="comfortable" variant="tonal">{{ error }}</v-alert>
+        </v-form>
+      </v-card-text>
+      <v-card-actions class="justify-end ga-2">
+        <v-btn variant="text" @click="closeDialog">Cancelar</v-btn>
+        <v-btn color="primary" :loading="loading" @click="onSubmit">Guardar</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
 import { usePaymentsStore } from '@/stores/payments'
 import type { PaymentPayload } from '@/utils/payments'
 import { fetchSubscriptions } from '@/utils/subscriptions'
 
-const emit = defineEmits<{ saved: []; close: [] }>()
+const emit = defineEmits<{ saved: []; close: []; 'update:modelValue': [boolean] }>()
+const props = defineProps<{ modelValue: boolean }>()
 const store = usePaymentsStore()
 
 const form = reactive<PaymentPayload>({
@@ -51,14 +51,17 @@ const form = reactive<PaymentPayload>({
 })
 const loading = ref(false)
 const error = ref('')
-const options = ref<{ id: number; member: string; plan: string }[]>([])
+const options = ref<{ id: number; label: string }[]>([])
+const open = computed({
+  get: () => props.modelValue,
+  set: (val: boolean) => emit('update:modelValue', val),
+})
 
 onMounted(async () => {
   const data = await fetchSubscriptions(1)
   options.value = data.data.map((s: any) => ({
     id: s.id,
-    member: s.member?.name || `Miembro ${s.member_id}`,
-    plan: s.plan?.name || `Plan ${s.plan_id}`,
+    label: `#${s.id} - ${s.member?.name || 'Miembro'} / ${s.plan?.name || 'Plan'}`,
   }))
 })
 
@@ -68,23 +71,16 @@ const onSubmit = async () => {
   try {
     await store.create(form)
     emit('saved')
+    emit('update:modelValue', false)
   } catch (e) {
     error.value = 'No se pudo registrar el pago'
   } finally {
     loading.value = false
   }
 }
-</script>
 
-<style scoped>
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: grid; place-items: center; }
-.modal__content { background: #fff; padding: 1rem; border-radius: 8px; width: min(480px, 90vw); border: 1px solid #e5e7eb; }
-.modal__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.icon { border: none; background: transparent; font-size: 1.1rem; cursor: pointer; }
-form { display: flex; flex-direction: column; gap: 0.75rem; }
-input { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; }
-.actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
-button { padding: 0.5rem 0.8rem; border-radius: 6px; border: none; cursor: pointer; }
-button.primary { background: #2563eb; color: #fff; }
-.error { color: #b91c1c; }
-</style>
+const closeDialog = () => {
+  emit('update:modelValue', false)
+  emit('close')
+}
+</script>
